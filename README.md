@@ -2,7 +2,7 @@
 
 Custom types and providers for Identity Policy Audit (IPA).
 
-See License.md for Licensing.
+See LICENSE for Licensing.
 
 For more information on IPA see http://www.freeipa.org.
 
