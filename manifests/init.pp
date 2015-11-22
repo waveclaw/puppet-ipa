@@ -31,6 +31,7 @@ class ipa (
   $enable = hiera('ipa::enable', $ipa::defaults::enable),
   $domain = hiera('ipa::domain', undef),
   $master = hiera('ipa::master', undef),
+  $sssd_services = hiera('ipa::sssd::servics', $ipa::defauls::sssd_services),
 ) inherits ipa::defaults {
 
   # validate parameters here

@@ -1,0 +1,39 @@
+<% services=scope.lookupvar('::ipa::sssd_services') -%> 
+[sssd]
+config_file_version = 2
+reconnection_retries = 3
+sbus_timeout = 30
+services = <%= services  %>
+domains = <%= scope.lookupvar('::ipa::domain') %>
+
+[nss]
+# The following prevents SSSD from searching for the root user/group in
+# all domains (you can add here a comma-separated list of system accounts that
+# are always going to be /etc/passwd users, or that you want to filter out).
+filter_groups = root
+filter_users = root
+reconnection_retries = 3
+homedir_substrinb = /home
+
+[pam]
+reconnection_retries = 3
+
+[domain/<%= scope.lookupvar('::ipa::domain') -%>]
+cache_credentials = True
+krb5_store_password_if_offline = True
+krb5_realm = <%= scope.lookupvar('::ipa::domain') %>
+ipa_domain = <%= scope.lookupvar('::ipa::domain') %>
+id_provider = ipa
+auth_provider = ipa
+access_provider = ipa
+ipa_hostname = <%= @fqdn %>
+chpass_provider = ipa
+ipa_server = <%= scope.lookupvar('::ipa::master') %>
+ldap_tls_cacert = /etc/ipa/ca.crt
+ldap_user_extra_attrs = mail, givenname, sn
+
+# nss and pam are always assumed
+<% Array[services.reject { |service| service == 'nss' or service == 'pam' }].each { |service| -%>
+[<%= service -%>]
+<%# TODO: per-service configurations -%>
+<% } -%>

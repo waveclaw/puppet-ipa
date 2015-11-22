@@ -46,4 +46,13 @@ class ipa::config {
     ensure  => file,
     content => template('ipa/krb5.conf.erb'),
   }
+  file {'/etc/sssd':
+    ensure => directory,
+    mode   => '0755',
+  } -> 
+  file {'/etc/sssd/sssd.conf':
+    ensure => file,
+    mode   => '0600',
+    source => template('ipa/sssd.conf.erb'),
+  }
 }

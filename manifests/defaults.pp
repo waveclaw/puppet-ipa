@@ -12,6 +12,7 @@ class ipa::defaults {
       $master_packages = undef
       $master_services = undef
       $enable = true
+      $sssd_services = 'nss, pam'
     }
     'RedHat', 'Amazon': {
       $client_packages = [ 'sssd', 'ipa-client', 'kstart' ]
@@ -20,6 +21,7 @@ class ipa::defaults {
       $master_services = [ 'ipa-dnskeysyncd', 'sssd',
         'ipa-ods-exporter', 'ipa', 'ipa_memcached', ]
       $enable = true
+      $sssd_services = 'nss, sudo, pam, ssh'
     }
     'Suse': {
       $client_packages = [ 'sssd', 'kstart' ]
@@ -27,6 +29,7 @@ class ipa::defaults {
       $master_packages = undef
       $master_services = undef
       $enable = true
+      $sssd_services = 'nss, pam'
     }
     default: {
       $notice = join(["Operating System ${::operatingsystem} is not supported",
@@ -37,6 +40,7 @@ class ipa::defaults {
       $master_packages = undef
       $master_services = undef
       $enable = false
+      $sssd_services = undef
     }
   }
 }
