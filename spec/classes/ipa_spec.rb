@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-distpkg = { :Debian => ['sssd', 'kstart', 'krb5-config', 'krb5-user', 'libpam-krb5' ], 
+distpkg = { :Debian => ['sssd', 'kstart', 'krb5-config', 'krb5-user', 'libpam-krb5' ],
             :RedHat => ['sssd', 'ipa-client', 'kstart' ],
             :Suse => ['sssd', 'kstart' ] }
 
@@ -13,7 +13,8 @@ describe 'ipa' do
     it { is_expected.to contain_class('ipa::service') }
     it { is_expected.to contain_class('ipa::install::repo') }
     it { is_expected.to contain_class('ipa::install::client') }
-        
+    it { is_expected.to contain_class('ipa::config::client') }
+
     it { is_expected.to contain_file('/etc/ipa').with({'ensure' => 'directory'}) }
     it { is_expected.to contain_file('/etc/ipa/ca.pem').with({'ensure' => 'file'}) }
     it { is_expected.to contain_file('/etc/ipa/ipa.crt').with({'ensure' => 'file'}) }
@@ -21,6 +22,9 @@ describe 'ipa' do
 
     it { is_expected.to contain_file('/var/log/krb5').with({'ensure' => 'directory'}) }
     it { is_expected.to contain_file('/etc/krb5.conf').with({'ensure' => 'file'}) }
+
+    it { is_expected.to contain_file('/etc/sssd').with({'ensure' => 'directory'}) }
+    it { is_expected.to contain_file('/etc/sssd/sssd.conf').with({'ensure' => 'file'}) }
   end
 
   context 'supported operating systems' do
@@ -33,7 +37,7 @@ describe 'ipa' do
         it { is_expected.to compile.with_all_deps }
         it_behaves_like 'a supported operating system'
 
-        if osfamily == 'RedHat' 
+        if osfamily == 'RedHat'
           it { is_expected.to contain_yumrepo('mkosek-freeipa') }
         end
         distpkg[osfamily.to_sym].each do |pkg|
@@ -54,28 +58,31 @@ describe 'ipa' do
 
       it { is_expected.to compile.with_all_deps }
       it { is_expected.to contain_class('ipa') }
-      #it { is_expected.to_not contain_class('ipa::defaults') }
-      #it { is_expected.to_not contain_class('ipa::install') }
-      #it { is_expected.to_not contain_class('ipa::config') }
-      #it { is_expected.to_not contain_class('ipa::service') }
       it { is_expected.to contain_notify('Operating System Nexenta is not supported by the Puppet DSL part of the IPA module.') }
       #it { expect { is_expected.to contain_package('ipa') }.to raise_error(Puppet::Error, /Nexenta not supported/) }
     end
   end
 
   context 'on an IPA Server' do
-    [ 'master', 'replica'].each do |role|
+    [ 'master', 'replica', 'server', 'primary'].each do |role|
       describe "#{role} role on RedHat" do
         let(:params) {{
           :role => role
         }}
         let(:facts) {{
           :osfamily => 'RedHat',
-          :ipa_role => role
         }}
         it { is_expected.to compile.with_all_deps }
-        it { is_expected.to contain_class('ipa') }
+        it_behaves_like 'a supported operating system'
+
         it { is_expected.to contain_class('ipa::install::server') }
+        it { is_expected.to contain_class('ipa::config::server') }
+        if (role == 'replica')
+          it { is_expected.to contain_class("ipa::config::server::#{role}") }
+        end
+        if ( role == 'master' or role == 'primary')
+          it { is_expected.to contain_class("ipa::config::server::primary") }
+        end
         ['sssd', 'freeipa-server', 'ipa-client' ].each do |pkg|
           it { is_expected.to contain_package(pkg).with_ensure('present') }
         end
@@ -85,11 +92,11 @@ describe 'ipa' do
       end # end describe
     end # end role
   end # end context
-  
+
 
   context 'on an IPA Server' do
     [ 'master', 'replica'].each do |role|
-      describe "#{role} role on an unsupported platform" do
+      describe "#{role} role on an unsupported server platform" do
         let(:params) {{
           :role => role
         }}
@@ -98,7 +105,8 @@ describe 'ipa' do
           :ipa_role => role
         }}
         it { is_expected.to compile.with_all_deps }
-        it { is_expected.to contain_class('ipa') }
+        it_behaves_like 'a supported operating system'
+
         ['freeipa-server', 'ipa-client' ].each do |pkg|
           it { should_not contain_package(pkg).with_ensure('present') }
         end
@@ -110,5 +118,5 @@ describe 'ipa' do
       end # end describe
     end # end role
   end # end context
-  
+
 end

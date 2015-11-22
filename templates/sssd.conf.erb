@@ -1,4 +1,4 @@
-<% services=scope.lookupvar('::ipa::sssd_services') -%> 
+<% services=scope.lookupvar('::ipa::sssd_services') -%>
 [sssd]
 config_file_version = 2
 reconnection_retries = 3
@@ -32,8 +32,9 @@ ipa_server = <%= scope.lookupvar('::ipa::master') %>
 ldap_tls_cacert = /etc/ipa/ca.crt
 ldap_user_extra_attrs = mail, givenname, sn
 
-# nss and pam are always assumed
-<% Array[services.reject { |service| service == 'nss' or service == 'pam' }].each { |service| -%>
+<%# nss and pam are always assumed -%>
+<% services.each { |service| -%>
+<% next if service == 'nss' or service == 'pam' -%>
 [<%= service -%>]
 <%# TODO: per-service configurations -%>
 <% } -%>

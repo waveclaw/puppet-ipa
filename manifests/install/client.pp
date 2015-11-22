@@ -1,9 +1,23 @@
+#  ipa::install::client
+#
+#  Install the client packages.
+#
+################################################################################
+#
+# manifsts/foo.pp
+#
+# Copyright 2015 Jeremiah Powell (waveclaw@waveclaw.net)
+#
+# See LICENSE for Licensing.
+#
+################################################################################
+#
 # == Class: ipa::client::install
 #
 # IPA - Control client installation
 #
 # === Parameters
-# 
+#
 # [*TBD*]
 #  Example Parameter
 #
@@ -18,10 +32,12 @@
 #
 #
 class ipa::install::client (
-  $reinstall = false,
-  $host = hiera('ipa::config::host', $ipa::defaults::host),
+  $reinstall = hiera('ipa::reinstall', false),
+  $server = hiera('ipa::server', $::ipa::server),
 ) inherits ipa::defaults {
-  #if ($reinstall or $::ipa_client_registered == '') {
+  
+  # TODO: implement client
+  #if ($reinstall or $::ipa_domain == '') {
   # ipa_resolver_flush { "flushcache-${host}": cache => all, }
   # ipa_client_installer { $host: }
   # ipa_client_register { $host: }

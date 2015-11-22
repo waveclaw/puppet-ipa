@@ -1,9 +1,23 @@
+# ipa::install::repo
+#
+#  Abstract a repository structure for various platforms
+#
+################################################################################
+#
+# manifsts/foo.pp
+#
+# Copyright 2015 Jeremiah Powell (waveclaw@waveclaw.net)
+#
+# See LICENSE for Licensing.
+#
+################################################################################
+#
 # == Class: ipa::install::yumrepo
 #
 # Identity Policy Audit (IPA) repository provided by Mosek.
 #
 # === Parameters
-# 
+#
 # [*none*]
 #  This class just wraps the repository resource
 #
@@ -27,7 +41,7 @@ class ipa::install::repo {
       # case $operatingsystem {
       # 'OpenSuSE' : {
       # zypprepo { "openSUSE_$::lsbdistrelease}":
-      #    baseurl      => join([ 'http:', '', 
+      #    baseurl      => join([ 'http:', '',
       #      'download.opensuse.org', 'distribution', $::lsbdistrelease,
       #      'repo', 'oss', 'suse', ], '/'),
       #    enabled      => 1,

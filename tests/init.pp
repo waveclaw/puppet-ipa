@@ -1,3 +1,14 @@
+#
+#################################################################################
+#
+# tests/init.pp
+#
+# Copyright 2015 Jeremiah Powell (waveclaw@waveclaw.net)
+#
+# See LICENSE for Licensing.
+#
+################################################################################
+#
 # The baseline for module testing used by Puppet Labs is that each manifest
 # should have a corresponding test manifest that declares that class or defined
 # type.

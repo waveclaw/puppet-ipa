@@ -1,9 +1,23 @@
+# ipa::config::client::remove
+#
+#  Remove a client from the IPA server and deprovision the local registration
+#
+################################################################################
+#
+# manifests/client/remove.pp
+#
+# Copyright 2015 Jeremiah Powell (waveclaw@waveclaw.net)
+#
+# See LICENSE for Licensing.
+#
+################################################################################
+#
 # == Class: ipa::client::remove
 #
 # IPA - Control client de-installation
 #
 # === Parameters
-# 
+#
 # [*TBD*]
 #  Example Parameter
 #
