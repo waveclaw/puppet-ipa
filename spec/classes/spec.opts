@@ -1,0 +1,1 @@
+--require yarjuf --format JUnit --out ./spec/test-reports/rspec.xml --deprecation-out /dev/null --no-color

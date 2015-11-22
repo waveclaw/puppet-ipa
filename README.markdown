@@ -1,283 +1,4 @@
-# IPA Puppet module
-
-[![Build Status](https://travis-ci.org/waveclaw/waveclaw-ipa.png?branch=master)](https://travis-ci.org/waveclaw/waveclaw-ipa)
-
-Overview
---------
-
-Puppet module to manage IPA masters, replicas and clients.
-
-waveclaw/wavelcaw-ipa aims to use native IPA IPAs to install, configure and replicate IPA masters.  Client installation is provided through the ipa\_client type.
-
-Only the replica features assume setup of an IPA master.  Design is largely inspired by the Harvard Univeristy module [https://github.com/huit/puppet-ipa].  Instead of largely being degined types build on exec resources this module users the IPA library created by jonwuz [https://github.com/jonwuz].
-
-IPA replica servers will be automatically configured with a replication agreement on the IPA primary master server.
-
-TODO - All Puppet nodes added as clients will automatically be added to the IPA domain through exported resources.
-
-TODO - Multiple IPA domains are supported.
-
-A remove feature has been included to remove the IPA client from nodes including packages.
-
-Dependencies
-------------
-
-The ability to use [Exported resources](http://docs.puppetlabs.com/guides/exported_resources.html) and 
-[Stored Configuration](http://projects.puppetlabs.com/projects/1/wiki/Using_Stored_Configuration) enabled on the Puppet master.
-
-[puppetlabs/puppetlabs-firewall](https://forge.puppetlabs.com/puppetlabs/firewall) module.
-
-[puppetlabs/stdlib](https://forge.puppetlabs.com/puppetlabs/stdlib) module.
-
-## Optional 
-
-[ripienaar/puppet-module-data](https://forge.puppetlabs.com/ripienaar/module-data) formatted data is provided for defaults in leiu of the params pattern.  See data/hiera.yaml and manifests/defaults.pp for more details.
-
-[TomPoulton/hiera-eyaml](https://forge.puppetlabs.com/tompoulton/hiera-eyaml) for secure passwords in YAML.
-
-Usage
------
-
-Here are a few simple usage examples. If you don't want to put your passwords in the clear, then use hiera-eyaml[https://github.com/TomPoulton/hiera-eyaml].
-
-IPA master:
-
-```puppet
-    node 'ipamaster.domain.name' {
-      class { 'ipa::config':
-        domain  => 'domain.name',
-        realm   => 'DOMAIN.NAME',
-        adminpw => 'somepasswd', # Cleartext example
-        dspw    => hiera('some_passwd') # Using hiera
-      }
-      class { 'ipa':
-        role => 'master', # Only one master per Puppet master
-      }
-    }
-```
-
-IPA replica:
-
-```puppet
-    node 'ipareplica1.domain.name' {
-      }
-      class { 'ipa::config':
-        domain  => 'domain.name',
-        realm   => 'DOMAIN.NAME',
-        adminpw => 'somepasswd',
-        dspw    => 'somepasswd',
-        otp     => 'onetimepasswd'
-      }
-      class { 'ipa':
-        role    => 'replica',
-    }
-```
-
-Another IPA replica:
-
-```puppet
-    node 'ipareplica2.domain.name' {
-      class { 'ipa::config':
-        domain  => 'domain.name',
-        realm   => 'DOMAIN.NAME',
-        adminpw => hiera('some_passwd'),
-        dspw    => hiera('some_passwd'), 
-        otp     => hiera('one_time_passwd'),
-      }
-      class { 'ipa':
-        role    => 'replica',
-      }
-    }
-```
-
-IPA client:
-
-```puppet
-    node 'ipaclient.domain.name' {
-      class { 'ipa::config':
-        domain      => 'domain.name',
-        realm       => 'DOMAIN.NAME',
-        loadbalance => true,
-        ipaservers  => ['ipaloadbalanceddnsname.domain.name','ipamaster.domain.name','ipareplica1.domain.name','ipareplica2.domain.name'],
-        # This string will show up the the description attribute of the computer account.
-        desc        => 'This is an IPA client',
-        otp         => hiera('one_time_passwd'),
-      }
-      class { 'ipa':
-        role   => 'client',
-        enable => true,
-      }
-    }
-```
-
-Cleanup parameter:
-
-```puppet
-    node 'ipawhatever.domain.name' {
-      class { 'ipa':
-        cleanup => true # Removes IPA completely. Mutually exclusive from master, replica and client parameters.
-      }
-    }
-```
-
-## Limitations
-
-IPA master and replicas require a RedHat family OS.
-
-
-## License
-
-   GPL 3.0.
-
-   For Details, see LICENSE.
-
-## Support
-
-Please report issues [here](https://github.com/waveclaw/waveclaw-ipa/issues).  Do NOT post issues with huit or jonwuz for problems with this module.
-
-For more information see [https://github.com/waveclaw/waveclaw-ipa.git](https://github.com/waveclaw/waveclaw-ipa.git)
-
-# Interfaces
-
-## Puppet DSL Interface
-
-Global ::ipa Options
----------------------
-
-Available parameters.
-
-####`role`
-
-Configures a server to be an IPA master, replica or client.
-
-Valid values are master, replica and client.
-
-Defaults to 'client'.
-
-####`domain`
-
-Defines the LDAP domain.
-
-Defaults to 'undef'.  
-
-If a DNS entry is provided that will be used as default.
-
-####`realm`
-
-Defines the Kerberos realm.
-
-Defaults to 'undef'. If a DNS entry is provided that will be used as default.
-
-
-### ipa::master::options
-
-####`adminpw`
-
-Defines the IPA administrative user password.
-
-Defaults to 'undef'.
-
-####`dspw`
-
-Defines the IPA directory services password.
-
-Defaults to 'undef'.
-
-####`otp`
-
-Defines an IPA client one-time-password.
-
-Defaults to 'undef'.
-
-####`dns`
-
-Controls the option to configure a DNS zone with the IPA master setup.
-
-Defaults to 'false'.
-
-
-####`forwarders`
-
-Defines an array of DNS forwarders to use when DNS is setup. An empty list will use the Root Nameservers.
-
-Defaults to '[]'.
-
-####`loadbalance`
-
-Controls the option to include any additional hostnames to be used in a load balanced IPA client configuration.
-
-Defaults to 'false'.
-
-####`ipaservers`
-
-Defines an array of additional hostnames to be used in a load balanced IPA client configuration.
-
-Defaults to '[]'
-
-####`automount`
-
-Controls the option to configure automounter maps in LDAP.
-
-Defaults to 'false'.
-
-### ipa::client::options
-
-####`mkhomedir`
-
-Controls the option to create user home directories on first login.
-
-Defaults to 'false'.
-
-####`ntp`
-
-Controls the option to configure NTP on a client.
-
-Defaults to 'false'.
-
-####`desc`
-
-Controls the description entry of an IPA client.
-
-Defaults to ''.
-
-####`locality`
-
-Controls the locality entry of an IPA client.
-
-Defaults to ''.
-
-####`location`
-
-Controls the location entry of an IPA client.
-
-Defaults to ''.
-
-####`sudo`
-
-Controls the option to configure sudo in LDAP.
-
-Requires the master to provide sudo in LDAP.
-
-Defaults to 'false'.
-
-####`sudopw`
-
-Defines the sudo user bind password.
-
-Defaults to 'undef'.
-
-
-####`autofs`
-
-Controls the option to start the autofs service and install the autofs package.
-
-Requies the master to provide autofs maps in LDAP.
-
-Defaults to 'false'.
-
-## Native Types
-
-Most of these derive from jonwuz-ipa. 
+----------------
 
 ### ipa_group
 
@@ -296,6 +17,7 @@ The nonposix parameter, if changed, will destroy and re-create the group.
     }
 
 #### Parameters
+
 
 description
 : __String__ A description for the group. Defaults to the name
@@ -324,6 +46,11 @@ provider
   ipa
   :
 
+
+
+
+----------------
+
 ### ipa_hbacrule
 
 Manages Host Based Access Control rules within IPA.
@@ -348,6 +75,7 @@ Note :
       }
 
 #### Parameters
+
 
 anyhost
 : __Boolean__ Whether this hbac rule applies to all hosts. Overrides hosts/hostgroups
@@ -402,6 +130,10 @@ users
 : __Array of strings__ a list of users `ipa_user` that this hbac rule applies to
 
 
+
+
+----------------
+
 ### ipa_hbacsvc
 
 Manages Host Based Access Control servcies within IPA.
@@ -415,6 +147,7 @@ lowercased, with underscores replacing spaces. Properties that take an array are
     }
 
 #### Parameters
+
 
 description
 : __String__ A description for the service. Defaults to the name of the service
@@ -435,6 +168,10 @@ provider
   ipa
   :
 
+
+
+
+----------------
 
 ### ipa_hbacsvcgroup
 
@@ -474,6 +211,10 @@ provider
   ipa
   :
 
+
+
+
+----------------
 
 ### ipa_host
 
@@ -539,6 +280,11 @@ provider
   ipa
   :
 
+
+
+
+----------------
+
 ### ipa_hostgroup
 
 Manages hostgroups within IPA.
@@ -573,6 +319,11 @@ provider
   ipa
   :
 
+
+
+
+----------------
+
 ### ipa_sudocmd
 
 Manages Sudo commands within IPA.
@@ -606,6 +357,10 @@ provider
   ipa
   :
 
+
+
+
+----------------
 
 ### ipa_sudocmdgroup
 
@@ -645,6 +400,10 @@ provider
   ipa
   :
 
+
+
+
+----------------
 
 ### ipa_sudorule
 
@@ -758,6 +517,10 @@ usergroups
 users
 : __Array of strings__ A list of users `ipa_user` permitted to run the commands in the sudo rule
 
+
+
+
+----------------
 
 ### ipa_user
 
@@ -880,4 +643,9 @@ usergroups
 
 zip
 : __String__ The users zip code / post code
+
+
+
+
+----------------
 

@@ -1,0 +1,4 @@
+---
+ipa::install::packages:
+  - "sssd"
+  - "ipa-client"

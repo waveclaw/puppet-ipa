@@ -1,0 +1,6 @@
+---
+ipa::role: "client"
+ipa::install::packages:
+  - "sssd"
+ipa::service::services:
+  - "sssd"

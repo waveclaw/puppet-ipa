@@ -1,0 +1,18 @@
+{
+  "name": "waveclaw-ipa",
+  "version": "0.1.0",
+  "author": [ 
+    "waveclaw <waveclaw@waveclaw.net>", 
+    "jonuwz <jonuwz@github.org>", 
+    "Harvard Univerity IT <huit@harvard.edu>" 
+  ],
+  "summary": "Manage IPA with native types",
+  "license": "Apache-2.0",
+  "source": "https://gitlab.waveclaw.net/Puppet/waveclaw-ipa",
+  "project_page": "https://gitlab.waveclaw.net/Puppet/waveclaw-ipa/wikis/home",
+  "issues_url": "https://github.com/waveclaw/puppet-ipa/issues",
+  "description": "Fork of jonuwz-ipa with huit-ipa interface",
+  "dependencies": [
+    {"name":"puppetlabs/stdlib"}
+  ]
+}

@@ -1,0 +1,12 @@
+---
+ipa::role: "replica"
+ipa::install::packages:
+  - "sssd"
+  - "freeipa-server"
+  - "ipa-client"
+ipa::service::services:
+  - "ipa-dnskeysyncd"
+  - "sssd"
+  - "ipa-ods-exporter"
+  - "ipa"
+  - "ipa_memcached"
