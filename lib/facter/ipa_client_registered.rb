@@ -10,7 +10,7 @@
 #import Facter::Util::IPA_domain
 #import Facter::Utils::IPA_master
 
-module Facter::Util::IPA_domain
+module Facter::Util::Ipa_domain
   @doc=<<EOF
     The IPA Domain fact
 EOF
@@ -53,5 +53,5 @@ end
 
 
 Facter.add(:ipa_client_registered) do
-  setcode { Facter::Util::IPA_client_registered.ipa_client_registered }
+  setcode { Facter::Util::Ipa_client_registered.ipa_client_registered }
 end

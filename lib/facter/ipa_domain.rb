@@ -7,7 +7,7 @@
 #
 #   See LICENSE for licensing.
 #
-module Facter::Util::IPA_domain
+module Facter::Util::Ipa_domain
   @doc=<<EOF
     The IPA Domain fact
 EOF
@@ -73,5 +73,5 @@ EOF
 end
 
 Facter.add(:ipa_domain) do
-    setcode { Facter::Util::IPA_domain.ipa_domain }
+    setcode { Facter::Util::Ipa_domain.ipa_domain }
 end
