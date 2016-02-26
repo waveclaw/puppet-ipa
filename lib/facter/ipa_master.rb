@@ -70,5 +70,10 @@ EOF
 end
 
 Facter.add(:ipa_master) do
-    setcode { Facter::Util::Ipa_master.ipa_master }
+  confine do
+    File.exists? '/etc/sssd/sssd.conf' or
+    File.exists? '/etc/krb5.conf' or
+    File.exists? '/etc/openldap/ldap.conf'
+  end
+  setcode { Facter::Util::Ipa_master.ipa_master }
 end

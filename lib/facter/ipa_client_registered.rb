@@ -53,5 +53,10 @@ end
 
 
 Facter.add(:ipa_client_registered) do
+  confine do
+    File.exists? '/etc/krb5.keytab' and
+    File.exists? '/usr/bin/k5start' and
+    File.exists? '/usr/bin/ldapsearch' 
+  end
   setcode { Facter::Util::Ipa_client_registered.ipa_client_registered }
 end

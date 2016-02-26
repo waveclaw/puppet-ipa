@@ -73,5 +73,10 @@ EOF
 end
 
 Facter.add(:ipa_domain) do
-    setcode { Facter::Util::Ipa_domain.ipa_domain }
+  confine do
+    File.exists? '/etc/sssd/sssd.conf' or
+    File.exists? '/etc/krb5.conf' or
+    File.exists? '/etc/openldap/ldap.conf'
+  end
+  setcode { Facter::Util::Ipa_domain.ipa_domain }
 end
