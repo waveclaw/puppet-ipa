@@ -37,7 +37,7 @@ EOF
         File.open('/etc/krb5.conf','r') { |line|
           realms = true if line =~ /\[realms\].*/
           realms = false if (realms and line =~ /\s*}\s*/)
-          in_default = true if (realms and line =~ /#{default_realm}\s*=\s*{.*/)
+          in_default = true if (realms and line =~ /#{default_realm}\s*=\s*\{.*/)
           if (in_default and line =~ /.*master_kdc\s*=\s*(\S+)/)
              master_kdc = $1
            end
