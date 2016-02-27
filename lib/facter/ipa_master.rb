@@ -7,9 +7,9 @@
 #
 #   See LICENSE for licensing.
 #
-module Facter::Util::Ipa_domain
+module Facter::Util::Ipa_master
   @doc=<<EOF
-    The IPA Domain fact
+    The IPA Master server.  This is the LDAP Primary.
 EOF
   class << self
 
