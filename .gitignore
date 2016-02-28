@@ -1,10 +1,13 @@
 .*.sw?
-bin
 pkg
 spec/fixtures
+!spec/fixtures/hiera.yaml
+!spec/fixtures/hieradata/*.yaml
+!spec/fixtures/manifests/site.pp
 .rspec_system
 .vagrant
 .bundle
 vendor
-!spec/fixtures/hiera.yaml
-!spec/fixtures/hieradata/default.yaml
+.idea
+bin
+Gemfile.lock
