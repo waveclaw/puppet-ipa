@@ -36,23 +36,41 @@ EOF
     end
 
     def krb5_master
+      # krb5.conf is NOT an ini-format file :-{
       master = nil
-      default_realm = Facter::Util::Resolution.exec(
-        "awk '/^default_realm.*=.*/ {print $NF}' /etc/krb5.conf | head -1")
-      # search for master_kdc in default_realm in [realms]
-      # using a brute-force stateful scanner
+      default_realm = nil
+      # I know, I'll user regular expiressions! (https://xkcd.com/208/)
+      default_realm = /\=\s*(\S+)/.match(
+          File.open('/etc/krb5.conf','r') { |f|
+            f.each_line.detect {
+             |line| /default_realm\s*\=/.match(line)
+            }
+          }
+        )[1]
       if default_realm
-       begin # file error very likely due to close bugs
-        File.open('/etc/krb5.conf','r') { |line|
-          realms = true if line =~ /\[realms\].*/
-          realms = false if (realms and line =~ /\s*}\s*/)
-          in_default = true if (realms and line =~ /#{default_realm}\s*=\s*\{.*/)
-          if (in_default and line =~ /.*master_kdc\s*=\s*(\S+)/)
-             master = $1
-           end
-         }
-       Rescue FileError => fe
-       end
+        # use a brute-force stateful scanner to search for (master_)kdc in
+        # default_realm blocks in [realms] sections
+        in_realms = false
+        realm_found = false
+        File.open('/etc/krb5.conf','r').each_line { |line|
+          if (/^[^#]?\s*\[realms\]/ =~ line)
+            in_realms = true
+            next
+          end
+          if (in_realms == true and
+            /^[^#]?\s*(#{default_realm})\s*\=\s*\{/i =~ line)
+            realm_found = true
+            next
+          end
+            if (in_realms == true and realm_found == true and
+              /^[^#]?\s*(?:master_)?kdc\s*\=\s*(\S+):/ =~ line)
+                master = $1
+          end
+          #if (in_realms == true and /^[^#]?\s*\}/ =~ line)
+          #  realm_found = false
+          #  next
+          #end
+        }
       end
       master
     end

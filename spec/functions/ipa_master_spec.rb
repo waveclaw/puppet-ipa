@@ -98,6 +98,45 @@ stuff',
   }
 ]
 
+krb5_examples = [
+  {
+    :desc     => 'the kdc for a master example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
+
+[realms]
+EXAMPLE.COM = {
+  master_kdc = ipa.example.com:88
+}',
+    :expected => 'ipa.example.com'
+  },
+  {
+    :desc     => 'the kdc for a simple example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
+
+[realms]
+EXAMPLE.COM = {
+  kdc = ipa.example.com:1234
+}',
+    :expected => 'ipa.example.com'
+  },
+  {
+    :desc     => 'nothing for a commented example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
+
+#[realms]
+#EXAMPLE.COM = {
+#  kdc = ipa.example.com:1234
+#}',
+    :expected => nil
+  }
+]
+
 describe Facter::Util::Ipa_master, :type => :puppet_function do
   context 'with just sssd.conf' do
     before :each do
@@ -147,17 +186,23 @@ describe Facter::Util::Ipa_master, :type => :puppet_function do
         allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { false }
     end
     it "should return nothing when there is an error" do
-      expect(File).to receive(:exist?).with( '/etc/krb5.conf' ) { true }
-      expect(Facter::Util::Resolution).to receive(:exec).with(
-        "awk '/^default_realm.*=.*/ {print $NF}' /etc/krb5.conf | head -1") { throw Error }
+      expect(File).to receive(:exist?).with( '/etc/krb5.conf') { true }
+      expect(File).to receive(:open).with('/etc/krb5.conf', 'r') { throw Error }
       expect(Facter::Util::Ipa_master.ipa_master).to eq(nil)
     end
     it "should return nothing when there is a no data" do
       expect(File).to receive(:exist?).with( '/etc/krb5.conf' ) { true }
-      expect(Facter::Util::Resolution).to receive(:exec).with(
-        "awk '/^default_realm.*=.*/ {print $NF}' /etc/krb5.conf | head -1") { '' }
+      expect(File).to receive(:open).with('/etc/krb5.conf','r') { '' }
       expect(Facter::Util::Ipa_master.ipa_master).to eq(nil)
     end
+    krb5_examples.each { |xample|
+      it "should return #{xample[:desc]}" do
+        expect(File).to receive(:exist?).with( '/etc/krb5.conf' ) { true }
+        expect(File).to receive(:open).with('/etc/krb5.conf','r') { xample[:data] }
+        expect(File).to receive(:open).with('/etc/krb5.conf','r') { xample[:data] }
+        expect(Facter::Util::Ipa_master.ipa_master).to eq(xample[:expected])
+      end
+    }
   end
   context 'on an unsupported platform' do
     before :each do
