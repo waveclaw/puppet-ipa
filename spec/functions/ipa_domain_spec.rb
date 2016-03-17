@@ -8,106 +8,183 @@
 #
 
 require 'spec_helper'
-require 'facter/rhsm_available_repos'
-
-cases = {
-  :one   => {
-    :desc => 'a single enabled repository',
-    :data => '
-Repo ID:   rhel-5-server-rpms
-Repo Name: RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/rhel/os
-Enabled:   1
-',
-    :expected => ['rhel-5-server-rpms'],
+require 'facter/ipa_domain'
+ssd_examples = [
+  {
+    :desc     => 'nothing when there is no data',
+    :data     => '',
+    :expected => nil
   },
-  :two   => {
-    :desc => 'a single disabled repostiory',
-    :data => '
-Repo ID:   rhel-5-server-rpms
-Repo Name: RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/rhel/os
-Enabled:   0
-',
-    :expected => ['rhel-5-server-rpms'],
+  {
+    :desc     => 'the domain in a simple example',
+    :data     => 'ipa_domain = example.com',
+    :expected => 'example.com'
   },
-  :three => {
-    :desc => 'two disabled repositories',
-    :data => '
-Repo ID:   rhel-5-server-rpms
-Repo Name: RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/rhel/os
-Enabled:   0
-
-Repo ID:   rhel-5-epel-rpms
-Repo Name: Extra Packages for RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/epel/os
-Enabled:   0
+  {
+    :desc     => 'the domain in a set of garbage data',
+    :data     => '
+garbage
+ipa_domain=example.com
+some=moretrash
 ',
-    :expected => ['rhel-5-server-rpms', 'rhel-5-epel-rpms'],
+    :expected => 'example.com'
   },
-  :four  => {
-    :desc => 'two repositories with one disabled',
-    :data => '
-Repo ID:   rhel-5-server-rpms
-Repo Name: RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/rhel/os
-Enabled:   0
+  {
+    :desc     => 'the domain when there is an alpha numeric domain',
+    :data     => 'ipa_domain = freeipa0001.something.',
+    :expected => 'freeipa0001.something.'
+  }
+]
 
-Repo ID:   rhel-5-epel-rpms
-Repo Name: Extra Packages for RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/epel/os
-Enabled:   1
+ldap_examples = [
+  {
+    :desc     => 'nothing when there is no data',
+    :data     => '',
+    :expected => nil
+  },
+  {
+    :desc     => 'nothing for non-null garbage',
+    :data     => '
+some nifty garbageURI stuff
+
 ',
-    :expected => ['rhel-5-server-rpms', 'rhel-5-epel-rpms'],
+    :expected => nil
   },
-  :five  => {
-    :desc => 'two repositories with both enabled',
-    :data => '
-Repo ID:   rhel-5-server-rpms
-Repo Name: RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/rhel/os
-Enabled:   1
-
-Repo ID:   rhel-5-epel-rpms
-Repo Name: Extra Packages for RedHat Enterprise Linux 5 Server (RPMs)
-Repo URL:  https://katello.example.com/pulp/repos/myorg/production/myview/content/dist/rhel/server/5/5Server/$basearch/epel/os
-Enabled:   1
-',
-    :expected => ['rhel-5-server-rpms', 'rhel-5-epel-rpms'],
+  {
+    :desc     => 'an ldap BASE with comments',
+    :data     => '
+BASE dc=example,dc=net
+#BASE dc=wrong,dc=example,dc=foo
+ipa_server ldap.example.com
+stuff',
+    :expected => 'example.net'
   },
-}
+  {
+    :desc     => 'an ldap BASE',
+    :data     => 'BASE dc=example,dc=net',
+    :expected => 'example.net'
+  },
+  {
+    :desc     => 'an ldap BASE with no parts',
+    :data     => 'BASE dc=example.net',
+    :expected => 'example.net'
+  },
+]
 
+krb5_examples = [
+  {
+    :desc     => 'a dotted example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
 
-describe Facter::Util::Rhsm_available_repos, :type => :puppet_function do
-  context 'on a supported platform' do
+[realms]
+EXAMPLE.COM = {
+  default_domain = example.com
+}',
+    :expected => 'example.com'
+  },
+  {
+    :desc     => 'a simple example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
+
+[realms]
+EXAMPLE.COM = {
+  default_domain = example
+}',
+    :expected => 'example'
+  },
+  {
+    :desc     => 'nothing for a commented example',
+    :realm    => 'EXAMPLE.COM',
+    :data     => '
+default_realm = EXAMPLE.COM
+
+#[realms]
+#EXAMPLE.COM = {
+#  default_domain = ipa.example.com
+#}',
+    :expected => nil
+  }
+]
+
+describe Facter::Util::Ipa_domain, :type => :puppet_function do
+  context 'with just sssd.conf' do
     before :each do
       allow(File).to receive(:exist?).with(
-      '/usr/sbin/subscription-manager') { true }
+      '/etc/sssd/sssd.conf' ) { true }
+      allow(File).to receive(:exist?).with(
+      '/etc/krb5.conf' ) { false }
+      allow(File).to receive(:exist?).with(
+      '/etc/openldap/ldap.conf' ) { false }
+
     end
     it "should return nothing when there is an error" do
-      expect(Facter::Util::Resolution).to receive(:exec).with(
-        '/usr/sbin/subscription-manager repos') { throw Error }
-      expect(Facter::Util::Rhsm_available_repos.rhsm_available_repos).to eq([])
+      expect(File).to receive(:open).with(
+        '/etc/sssd/sssd.conf','r') { throw Error }
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
     end
-    cases.keys.each { |key|
-      desc = cases[key][:desc]
-      it "should return results for #{desc}" do
-        expect(Facter::Util::Resolution).to receive(:exec).with(
-          '/usr/sbin/subscription-manager repos') {
-            cases[key][:data]}
-          expect(Facter::Util::Rhsm_available_repos.rhsm_available_repos).to eq(
-            cases[key][:expected] )
+    ssd_examples.each {|xample|
+      it "should return #{xample[:desc]}" do
+        expect(File).to receive(:open).with(
+          '/etc/sssd/sssd.conf','r') { StringIO.new(xample[:data]) }
+        expect(Facter::Util::Ipa_domain.ipa_domain).to eq(xample[:expected])
+      end
+    }
+  end
+  context 'with just ldap.conf' do
+    before :each do
+      allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
+    end
+    it "should return nothing when there is an error" do
+      expect(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { true }
+      expect(File).to receive(:open).with(
+        '/etc/openldap/ldap.conf','r') { throw Error }
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
+    end
+    ldap_examples.each {|xample|
+      it "should return a master for #{xample[:desc]}" do
+        expect(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { true }
+        expect(File).to receive(:open).with(
+          '/etc/openldap/ldap.conf','r') { StringIO.new(xample[:data]) }
+        expect(Facter::Util::Ipa_domain.ipa_domain).to eq(xample[:expected])
+      end
+    }
+  end
+  context 'with just krb5.conf' do
+    before :each do
+        allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
+        allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { false }
+    end
+    it "should return nothing when there is an error" do
+      expect(File).to receive(:exist?).with( '/etc/krb5.conf') { true }
+      expect(File).to receive(:open).with('/etc/krb5.conf', 'r') { throw Error }
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
+    end
+    it "should return nothing when there is a no data" do
+      expect(File).to receive(:exist?).with( '/etc/krb5.conf' ) { true }
+      expect(File).to receive(:open).with('/etc/krb5.conf','r') { '' }
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
+    end
+    krb5_examples.each { |xample|
+      it "should return #{xample[:desc]}" do
+        expect(File).to receive(:exist?).with( '/etc/krb5.conf' ) { true }
+        expect(File).to receive(:open).with('/etc/krb5.conf','r') { xample[:data] }
+        expect(File).to receive(:open).with('/etc/krb5.conf','r') { xample[:data] }
+        expect(Facter::Util::Ipa_domain.ipa_domain).to eq(xample[:expected])
       end
     }
   end
   context 'on an unsupported platform' do
     before :each do
-      allow(File).to receive(:exist?).with(
-      '/usr/sbin/subscription-manager') { false }
+      allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
+      allow(File).to receive(:exist?).with('/etc/krb5.conf' ) { false }
+      allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { false }
     end
     it "should return nothing" do
-      expect(Facter::Util::Rhsm_available_repos.rhsm_available_repos).to eq([])
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
     end
   end
 end
