@@ -99,9 +99,9 @@ end
 
 Facter.add(:ipa_domain) do
   confine do
-    File.exists? '/etc/sssd/sssd.conf' or
-    File.exists? '/etc/krb5.conf' or
-    File.exists? '/etc/openldap/ldap.conf'
+    File.exiss? '/etc/sssd/sssd.conf' or
+    File.exist? '/etc/krb5.conf' or
+    File.exist? '/etc/openldap/ldap.conf'
   end
   setcode { Facter::Util::Ipa_domain.ipa_domain }
 end

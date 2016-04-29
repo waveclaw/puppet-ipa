@@ -76,7 +76,7 @@ module IPAcommon
     post("#{@ipaclass}_del", [[target],{}] )
   end
 
-end  
+end
 
 module IPAmembers
 
@@ -86,7 +86,7 @@ module IPAmembers
     :sudocmdgroup => :sudocmd,
     :hbacsvcgroup => :hbacsvc,
   }
-  
+
   def member_element
     @@IPAmember_element[@ipaclass.to_sym]
   end
@@ -118,7 +118,7 @@ class IPAhost
       :managedby => :managedby_host,
       :hostgroups => :memberof_hostgroup,
     }
- 
+
   @@arrays=[:managedby, :hostgroups, :managedby_host, :memberof_hostgroup]
 
   def lookup
@@ -155,7 +155,7 @@ class IPAuser
       :mail => :mail,
       :telephone_numbers => :telephonenumber,
       :pager_numbers => :pager,
-      :mobile_numbers => :mobile, 
+      :mobile_numbers => :mobile,
       :fax_numbers => :facsimiletelephonenumber,
       :street_address => :street,
       :city => :l,
@@ -182,8 +182,8 @@ class IPAuser
   end
 
 end
-  
-class IPAhostgroup 
+
+class IPAhostgroup
 
   include IPAcommon
   include IPAmembers
@@ -251,7 +251,7 @@ class IPAsudorule
       end
     end
   end
-  
+
   def mod(target,opthash={})
     options={:all => true, :rights => true}
     opthash.each do |key,val|
@@ -260,7 +260,7 @@ class IPAsudorule
     end
     post("#{@ipaclass}_mod", [[target],options] )
   end
-  
+
   @@lookup={
     :options                => :ipasudoopt,
     :users                  => :memberuser_user,
@@ -279,21 +279,21 @@ class IPAsudorule
     :anyhost                => :hostcategory,
     :anycommand             => :cmdcategory,
     :anyrunasuser           => :ipasudorunasusercategory,
-    :anyrunasgroup          => :ipasudorunasgroupcategory,  
+    :anyrunasgroup          => :ipasudorunasgroupcategory,
   }
 
   @@arrays=[:users, :usergroups, :hosts, :hostgroups, :allow_commands, :allow_commandgroups,
             :deny_commands, :deny_commandgroups, :runasusers, :runasusergroups, :runasgroups,
             :options, ]
-      
+
   def lookup
     @@lookup
   end
 
   def prop_array?(key)
     @@arrays.include?(key) ? true : false
-  end  
-  
+  end
+
 end
 
 class IPAsudocmd
@@ -407,7 +407,7 @@ class IPAhbacrule
   def prop_array?(key)
     @@arrays.include?(key) ? true : false
   end
- 
+
 end
 
 class IPAhbacsvcgroup
@@ -446,7 +446,7 @@ class IPA
   def strict_decode64(bin)
     Base64.decode64(bin.split(/\n/).join(''))
   end
-  
+
   def initialize(host=nil)
 
     host = Socket.gethostbyname(Socket.gethostname).first if host.nil?
@@ -454,12 +454,12 @@ class IPA
     @gsok    = false
     @uri     = URI.parse "https://#{host}/ipa/json"
 
-    @extheader = { 
-      "referer"       => "https://ipa.auto.local/ipa",
+    @extheader = {
+      "referer"       => "https://#{host}/ipa",
       "Content-Type"  => "application/json",
       "Accept"        => "applicaton/json",
     }
-  
+
     @user         = IPAuser.new(self)
     @host         = IPAhost.new(self)
     @hostgroup    = IPAhostgroup.new(self)
@@ -485,17 +485,17 @@ class IPA
 
     @robot.ssl_config.set_trust_ca('/etc/ipa/ca.crt')
 
-  end 
+  end
 
-  def post(method,params) 
+  def post(method,params)
 
-    create_robot unless @robot    
+    create_robot unless @robot
 
     payload = { "method" => method, "params" => params }
     resp    = @robot.post(@uri, JSON.dump(payload), @extheader)
 
     # lets look at the response header and see if kerberos liked our auth
-    # only do this once since the context is established on success. 
+    # only do this once since the context is established on success.
 
     itok    = resp.header["WWW-Authenticate"].pop.split(/\s+/).last
     @gsok   = @gssapi.init_context(strict_decode64(itok)) unless @gsok
