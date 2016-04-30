@@ -99,7 +99,7 @@ end
 
 Facter.add(:ipa_domain) do
   confine do
-    File.exiss? '/etc/sssd/sssd.conf' or
+    File.exist? '/etc/sssd/sssd.conf' or
     File.exist? '/etc/krb5.conf' or
     File.exist? '/etc/openldap/ldap.conf'
   end
