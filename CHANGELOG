@@ -1,3 +1,8 @@
+2016-05-16 Release 0.1.2
+- Code-Climate and travis-ci support
+- Update Gemfile and Rakefile for Puppet 4 preparedness
+- Abandon data-in-modules suppport
+
 2015-01-29 Release 0.1.0
 - Import puppet-ipa by jonuwz
 - Initial Puppet "module-ification"

@@ -1,6 +1,0 @@
----
-:hierarchy:
-  - "%{::ipa_role}"
-  - "%{::fqdn}"
-  - "%{::osfamily}"
-  - common

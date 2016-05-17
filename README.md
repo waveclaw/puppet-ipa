@@ -1,6 +1,6 @@
 # IPA Puppet module
 
-[![Build Status](https://travis-ci.org/waveclaw/waveclaw-ipa.png?branch=master)](https://travis-ci.org/waveclaw/waveclaw-ipa)
+| [![Build Status](https://travis-ci.org/waveclaw/puppet-ipa.svg?branch=master)](https://travis-ci.org/waveclaw/puppet-ipa) | [![Code Climate](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/gpa.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa) | [![Test Coverage](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/coverage.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa/coverage) |
 
 Overview
 --------
@@ -22,14 +22,14 @@ A remove feature has been included to remove the IPA client from nodes including
 Dependencies
 ------------
 
-The ability to use [Exported resources](http://docs.puppetlabs.com/guides/exported_resources.html) and 
+The ability to use [Exported resources](http://docs.puppetlabs.com/guides/exported_resources.html) and
 [Stored Configuration](http://projects.puppetlabs.com/projects/1/wiki/Using_Stored_Configuration) enabled on the Puppet master.
 
 [puppetlabs/puppetlabs-firewall](https://forge.puppetlabs.com/puppetlabs/firewall) module.
 
 [puppetlabs/stdlib](https://forge.puppetlabs.com/puppetlabs/stdlib) module.
 
-## Optional 
+## Optional
 
 [ripienaar/puppet-module-data](https://forge.puppetlabs.com/ripienaar/module-data) formatted data is provided for defaults in leiu of the params pattern.  See data/hiera.yaml and manifests/defaults.pp for more details.
 
@@ -81,7 +81,7 @@ Another IPA replica:
         domain  => 'domain.name',
         realm   => 'DOMAIN.NAME',
         adminpw => hiera('some_passwd'),
-        dspw    => hiera('some_passwd'), 
+        dspw    => hiera('some_passwd'),
         otp     => hiera('one_time_passwd'),
       }
       class { 'ipa':
@@ -277,7 +277,7 @@ Defaults to 'false'.
 
 ## Native Types
 
-Most of these derive from jonwuz-ipa. 
+Most of these derive from jonwuz-ipa.
 
 ### ipa_group
 
@@ -880,4 +880,3 @@ usergroups
 
 zip
 : __String__ The users zip code / post code
-
