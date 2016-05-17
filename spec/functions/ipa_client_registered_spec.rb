@@ -13,7 +13,8 @@ require 'facter/ipa_client_registered'
 describe Facter::Util::Ipa_client_registered, :type => :puppet_function do
   context 'on an unsupported platform' do
     before :each do
-      allow(File).to receive(:exist?) { false }
+      allow(File).to receive(:exist?).with('/etc/krb5.keytab') { false }
+      allow(File).to receive(:exist?).with('/etc/ipa/ca.pem') { false }      
     end
     it "should return nothing" do
       expect(Facter::Util::Ipa_client_registered.ipa_client_registered).to eq(false)
@@ -108,6 +109,6 @@ fqdn=foo.example.com,cn=computers,cn=accounts,dc=example,dc=com') { 'stuff' }
     end
     it "should return true when there is a registration" do
     end
-=end    
+=end
   end
 end

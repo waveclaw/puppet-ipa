@@ -2,6 +2,8 @@
 - Code-Climate and travis-ci support
 - Update Gemfile and Rakefile for Puppet 4 preparedness
 - Abandon data-in-modules suppport
+- Drop Ruby 1.8.7 for rake requires 1.9.3 or later
+- Test under Puppet 4 and puppet 3.8 with or without FUTURE_PARSER
 
 2015-01-29 Release 0.1.0
 - Import puppet-ipa by jonuwz

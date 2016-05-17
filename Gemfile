@@ -16,7 +16,7 @@ group :development do
   gem "travis"
   gem "travis-lint"
   gem "vagrant-wrapper"
-  gem "puppet-blacksmith"
+#  gem "puppet-blacksmith" # requires symantic which is Puppet 2 incompatible
   gem "guard-rake"
 end
 

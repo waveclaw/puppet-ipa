@@ -14,7 +14,24 @@ module Facter::Util::Ipa_client_registered
 EOF
   class << self
     def ipa_client(fqdn='ipa.auto.local')
-      nil
+      # there has to be some kind of a proper ipa client library
+      # for ruby
+      record = nil
+      # principal = `klist /etc/krb5.keytab | awk '/$fqdn/ {print $2}'``
+      # kinit $principal -k -t /etc/krb5.keytab
+      # ipa host-show $(hostname).$(domainname)
+      fqdn = Facter.value(:fqdn)
+      begin
+        record = Facter::Util::Resolution.exec([
+          "/usr/bin/kinit",
+          "$(klist /etc/krb5.keytab | awk '/#{fqdn}/ {print $2}')",
+          "-k -t /etc/krb5.keytab &&",
+          "/usr/bin/ipa host-show $(hostname).$(domainname)"
+        ].join(' '))
+      rescue Exception => e
+        Facter.debug("#{e.backtrace[0]}: #{$!}.")
+      end
+      record.nil?
     end
 
     def ipa_query(ipa_master='localhost', fqdn='ipa.auto.local')
@@ -115,9 +132,7 @@ EOF
 end
 
 Facter.add(:ipa_client_registered) do
-  confine do
-    File.exist?('/etc/krb5.keytab') and
-    File.exist?('/etc/ipa/ca.pem')
-  end
+  confine { File.exist?('/etc/krb5.keytab') }
+  confine { File.exist?('/etc/ipa/ca.pem') }
   setcode { Facter::Util::Ipa_client_registered.ipa_client_registered }
 end
