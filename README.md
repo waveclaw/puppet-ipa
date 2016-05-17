@@ -127,7 +127,7 @@ IPA master and replicas require a RedHat family OS.
 
 ## License
 
-   GPL 3.0.
+   MIT.
 
    For Details, see LICENSE.
 
