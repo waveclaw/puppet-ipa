@@ -7,87 +7,67 @@
 #
 #   See LICENSE for licensing.
 #
+require 'facter'
+require 'facter/util/ipa_utils'
+
 module Facter::Util::Ipa_domain
   @doc=<<EOF
     The IPA Domain fact
 EOF
   class << self
-    def ssd_domain
-      domain = nil
-      ssd_conf = File.open('/etc/sssd/sssd.conf','r') # for instrumentation
-      ssd_conf.each_line {|line|
-        if (line =~ /[^#]*ipa_domain\s*\=\s*(.+)/)
-          domain = $1.chomp
-        end
-      }
-      domain
+    # check the SSSD configuration for a domain
+    # @return [string] the IPA domain
+    # @api private
+    def sssd
+      Facter::Util::Ipa_utils.search_sssd_conf(/[^#]*ipa_domain\s*\=\s*(.+)/)
     end
 
-    def ldap_domain
-      domain = nil
-      ldap_conf =  File.open('/etc/openldap/ldap.conf','r')
-      ldap_conf.each_line { |line|
-         if (line =~ /^[^#]?BASE\s+(\S+)/)
-           domain = $1
-         end
-        }
-      if domain
+    # check OpenLDAP for a domain setting
+    # @return [string] the LDAP BASE setting in DNS format
+    # @api private
+    def ldap
+        domain = Facter::Utils::Ipa_utils.search_ldap_conf(/^[^#]?BASE\s+(\S+)/)
+      if domain.nil?
+        nil
+      else
         /\.?(\S+)/.match(domain.split(/[,]?dc\=/).join('.'))[1]
       end
     end
 
-    def krb5_domain
-      # krb5.conf is NOT an ini-format file :-{
-      domain = nil
-      default_realm = nil
-      # I know, I'll user regular expiressions! (https://xkcd.com/208/)
-      default_realm = /\=\s*(\S+)/.match(
-          File.open('/etc/krb5.conf','r') { |f|
-            f.each_line.detect {
-             |line| /default_realm\s*\=/.match(line)
-            }
-          }
-        )[1]
-      if default_realm
-        # use a brute-force stateful scanner to search for (master_)kdc in
-        # default_realm blocks in [realms] sections
-        in_realms = false
-        realm_found = false
-        File.open('/etc/krb5.conf','r').each_line { |line|
-          if (/^[^#]?\s*\[realms\]/ =~ line)
-            in_realms = true
-            next
-          end
-          if (in_realms == true and
-            /^[^#]?\s*(#{default_realm})\s*\=\s*\{/i =~ line)
-            realm_found = true
-            next
-          end
-            if (in_realms == true and realm_found == true and
-              /^[^#]?\s*default_domain\s*\=\s*(\S+)/ =~ line)
-                domain = $1
-          end
-          #if (in_realms == true and /^[^#]?\s*\}/ =~ line)
-          #  realm_found = false
-          #  next
-          #end
-        }
-      end
-      domain
+    # Read the keberos configuration for a default realm
+    # @return [string] the default KDC realm in DNS format
+    # @api private
+    def krb5
+          Facter::Util::Ipa_utils.search_krb5_conf(
+            /^[^#]?\s*default_domain\s*\=\s*(\S+)/)
     end
 
+    # Get the domain from ipa-client or ipa tools
+    # @return [string] the domain name
+    # @api private
+    def ipatools
+      command = Facter::Utils::Ipa_utils.prepare_kinit(
+      '/usr/bin/ipa host-show $(hostname).$(domainname) ' +
+      "|awk -F@ '/Principal name:/ {print $NF}'")
+      Facter::Util:Resolution.exec(command)
+    end
+
+    # what is the IPA domainname
+    # @return [string] the domain
     def ipa_domain
       value = nil
-              #TODO: add an ipa-client attempt, too
       begin
         if File.exist? '/etc/sssd/sssd.conf'
-          value = self.ssd_domain
-        elsif (value == nil and File.exist? '/etc/openldap/ldap.conf')
-          value = self.ldap_domain
-        elsif (value == nil and File.exist? '/etc/krb5.conf')
-          value = self.krb5_domain
-        else
-          value = nil
+          value = self.sssd
+        end
+        if (value.nil? and File.exist? '/etc/openldap/ldap.conf')
+          value = self.ldap
+        end
+        if (value.nil? and File.exist? '/etc/krb5.conf')
+          value = self.krb5
+        end
+        if (value.nil? and File.exist '/usr/sbin/ipa')
+          value = self.ipatools
         end
       rescue Exception => e
         Facter.debug("#{e.backtrace[0]}: #{$!}.")

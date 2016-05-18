@@ -7,86 +7,69 @@
 #
 #   See LICENSE for licensing.
 #
+require 'facter'
+require 'facter/utils/ipa_utils'
+
 module Facter::Util::Ipa_master
   @doc=<<EOF
     The IPA Master server.  This is the LDAP Primary.
 EOF
   class << self
-
-    def sssd_master
-      master = nil
-      ssd_conf = File.open('/etc/sssd/sssd.conf','r') # for instrumentation
-      ssd_conf.each_line {|line|
-        if (line =~ /ipa_server\s*=\s*(.+)/)
-          master = $1.chomp
-        end
-      }
-      master
+    # SSSD configuration should contain the ipa server name
+    # @return [string] the name of the ipa server used by SSSD
+    # @api private
+    def sssd
+      Facter::Util::Ipa_utils.search_sssd_conf(/ipa_server\s*=\s*(.+)/)
     end
 
-    def ldap_master
-      master = nil
-      ldap_conf = File.open('/etc/openldap/ldap.conf','r') # for instrumentation
-      ldap_conf.each_line { |line|
-        if (line =~ /^URI\s+(\S+)/)
-          master = $1.split(':')[1].split('/')[2]  # not my finest hack
-        end
-      }
-      master
+    # guess the server based on the ldap URI
+    # @return [string] the FQDN of the URI entry
+    # @api private
+    def ldap
+      master = Facter::Utils::Ipa_utils.search_ldap_conf(/^URI\s+(\S+)/)
+      if master.nil?
+        nil
+      else
+       master.split(':')[1].split('/')[2]
+     end
     end
 
-    def krb5_master
-      # krb5.conf is NOT an ini-format file :-{
-      master = nil
-      default_realm = nil
-      # I know, I'll user regular expiressions! (https://xkcd.com/208/)
-      default_realm = /\=\s*(\S+)/.match(
-          File.open('/etc/krb5.conf','r') { |f|
-            f.each_line.detect {
-             |line| /default_realm\s*\=/.match(line)
-            }
-          }
-        )[1]
-      if default_realm
-        # use a brute-force stateful scanner to search for (master_)kdc in
-        # default_realm blocks in [realms] sections
-        in_realms = false
-        realm_found = false
-        File.open('/etc/krb5.conf','r').each_line { |line|
-          if (/^[^#]?\s*\[realms\]/ =~ line)
-            in_realms = true
-            next
-          end
-          if (in_realms == true and
-            /^[^#]?\s*(#{default_realm})\s*\=\s*\{/i =~ line)
-            realm_found = true
-            next
-          end
-            if (in_realms == true and realm_found == true and
-              /^[^#]?\s*(?:master_)?kdc\s*\=\s*(\S+):/ =~ line)
-                master = $1
-          end
-          #if (in_realms == true and /^[^#]?\s*\}/ =~ line)
-          #  realm_found = false
-          #  next
-          #end
-        }
+    # crawl the keberos configuration for the default realm's master
+    # @return [string] the keberos master as the ipa server
+    # @api private
+    def krb5
+      Facter::Util::Ipa_utils.search_krb5_conf(
+        /^[^#]?\s*(?:master_)?kdc\s*\=\s*(\S+):/)
+    end
+
+    # Get the domain from ipa-client or ipa tools
+    # @return [string] the domain name
+    # @api private
+    def ipatools
+      command = Facter::Utils::Ipa_utils.prepare_kinit(
+        "/usr/bin/ipa server-find --all | awk -F: '/Server name/ {print $NF}'")
+      found = Facter::Util:Resolution.exec(command)
+      if found.is_a? Array
+        found[0]
+      else
+        found
       end
-      master
     end
 
     def ipa_master
       master = nil
       begin
-        #TODO: add an ipa-client attempt, too
         if File.exist? '/etc/sssd/sssd.conf'
-          master = self.sssd_master
-        elsif (master == nil and File.exist? '/etc/openldap/ldap.conf')
-          master = self.ldap_master
-        elsif (master == nil and File.exist? '/etc/krb5.conf')
-          master = self.krb5_master
-        else
-          master = nil
+          master = self.sssd
+        end
+        if (master.nil? and File.exist? '/etc/openldap/ldap.conf')
+          master = self.ldap
+        end
+        if (master.nil? and File.exist? '/etc/krb5.conf')
+          master = self.krb5
+        end
+        if (master.nil? and File.exist? '/usr/bin/ipa')
+          master = self.ipatools
         end
       rescue Exception => e
         Facter.debug("#{e.backtrace[0]}: #{$!}.")
