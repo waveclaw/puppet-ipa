@@ -1,9 +1,10 @@
 # IPA Puppet module
 
-| [![Build Status](https://travis-ci.org/waveclaw/puppet-ipa.svg?branch=master)](https://travis-ci.org/waveclaw/puppet-ipa) | [![Code Climate](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/gpa.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa) | [![Test Coverage](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/coverage.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa/coverage) |
+[![Build Status](https://travis-ci.org/waveclaw/puppet-ipa.svg?branch=master)](https://travis-ci.org/waveclaw/puppet-ipa) [![Code Climate](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/gpa.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa) [![Test Coverage](https://codeclimate.com/github/waveclaw/puppet-ipa/badges/coverage.svg)](https://codeclimate.com/github/waveclaw/puppet-ipa/coverage)
 
 Overview
 --------
+
 
 Puppet module to manage IPA masters, replicas and clients.
 
