@@ -138,6 +138,7 @@ default_realm = EXAMPLE.COM
 ]
 
 describe Facter::Util::Ipa_master, :type => :puppet_function do
+
   context 'with just sssd.conf' do
     before :each do
       allow(File).to receive(:exist?).with(
@@ -161,6 +162,7 @@ describe Facter::Util::Ipa_master, :type => :puppet_function do
       end
     }
   end
+
   context 'with just ldap.conf' do
     before :each do
       allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
@@ -180,6 +182,7 @@ describe Facter::Util::Ipa_master, :type => :puppet_function do
       end
     }
   end
+
   context 'with just krb5.conf' do
     before :each do
         allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
@@ -204,6 +207,23 @@ describe Facter::Util::Ipa_master, :type => :puppet_function do
       end
     }
   end
+
+  context 'with just ipa tools' do
+    it 'should call the ipatools method' do
+      allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
+      allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { false }
+      allow(File).to receive(:exist?).with('/etc/krb5.conf' ) { false }      
+      expect(File).to receive(:exist?).with('/usr/sbin/ipa' ) { true }
+      expect(Facter::Util::Ipa_master).to receive(:ipatools) { 'foo' }
+      expect(Facter::Util::Ipa_master.ipa_master).to eq('foo')
+    end
+    it 'should use kinit prepare' do
+      expect(Facter::Util::Ipa_utils).to receive(:prepare_kinit) {'foo'}
+      expect(Facter::Util::Resolution).to receive(:exec).with('foo') { 'a' }
+      expect(Facter::Util::Ipa_master.ipatools).to eq('a')
+    end
+  end
+
   context 'on an unsupported platform' do
     before :each do
       allow(File).to receive(:exist?).with(
@@ -217,4 +237,5 @@ describe Facter::Util::Ipa_master, :type => :puppet_function do
       expect(Facter::Util::Ipa_master.ipa_master).to eq(nil)
     end
   end
+
 end

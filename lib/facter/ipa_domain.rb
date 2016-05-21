@@ -26,7 +26,7 @@ EOF
     # @return [string] the LDAP BASE setting in DNS format
     # @api private
     def ldap
-        domain = Facter::Utils::Ipa_utils.search_ldap_conf(/^[^#]?BASE\s+(\S+)/)
+        domain = Facter::Util::Ipa_utils.search_ldap_conf(/^[^#]?BASE\s+(\S+)/)
       if domain.nil?
         nil
       else
@@ -46,10 +46,12 @@ EOF
     # @return [string] the domain name
     # @api private
     def ipatools
-      command = Facter::Utils::Ipa_utils.prepare_kinit(
+      command = Facter::Util::Ipa_utils.prepare_kinit(
       '/usr/bin/ipa host-show $(hostname).$(domainname) ' +
       "|awk -F@ '/Principal name:/ {print $NF}'")
-      Facter::Util:Resolution.exec(command)
+      result = Facter::Util::Resolution.exec(command)
+      puts result
+      result
     end
 
     # what is the IPA domainname
@@ -58,16 +60,16 @@ EOF
       value = nil
       begin
         if File.exist? '/etc/sssd/sssd.conf'
-          value = self.sssd
+          value = sssd
         end
         if (value.nil? and File.exist? '/etc/openldap/ldap.conf')
-          value = self.ldap
+          value = ldap
         end
         if (value.nil? and File.exist? '/etc/krb5.conf')
-          value = self.krb5
+          value = krb5
         end
-        if (value.nil? and File.exist '/usr/sbin/ipa')
-          value = self.ipatools
+        if (value.nil? and File.exist? '/usr/sbin/ipa')
+          value = ipatools
         end
       rescue Exception => e
         Facter.debug("#{e.backtrace[0]}: #{$!}.")

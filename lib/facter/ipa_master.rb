@@ -8,7 +8,7 @@
 #   See LICENSE for licensing.
 #
 require 'facter'
-require 'facter/utils/ipa_utils'
+require 'facter/util/ipa_utils'
 
 module Facter::Util::Ipa_master
   @doc=<<EOF
@@ -26,7 +26,7 @@ EOF
     # @return [string] the FQDN of the URI entry
     # @api private
     def ldap
-      master = Facter::Utils::Ipa_utils.search_ldap_conf(/^URI\s+(\S+)/)
+      master = Facter::Util::Ipa_utils.search_ldap_conf(/^URI\s+(\S+)/)
       if master.nil?
         nil
       else
@@ -46,9 +46,9 @@ EOF
     # @return [string] the domain name
     # @api private
     def ipatools
-      command = Facter::Utils::Ipa_utils.prepare_kinit(
+      command = Facter::Util::Ipa_utils.prepare_kinit(
         "/usr/bin/ipa server-find --all | awk -F: '/Server name/ {print $NF}'")
-      found = Facter::Util:Resolution.exec(command)
+      found = Facter::Util::Resolution.exec(command)
       if found.is_a? Array
         found[0]
       else
@@ -60,16 +60,16 @@ EOF
       master = nil
       begin
         if File.exist? '/etc/sssd/sssd.conf'
-          master = self.sssd
+          master = sssd
         end
         if (master.nil? and File.exist? '/etc/openldap/ldap.conf')
-          master = self.ldap
+          master = ldap
         end
         if (master.nil? and File.exist? '/etc/krb5.conf')
-          master = self.krb5
+          master = krb5
         end
-        if (master.nil? and File.exist? '/usr/bin/ipa')
-          master = self.ipatools
+        if (master.nil? and File.exist? '/usr/sbin/ipa')
+          master = ipatools
         end
       rescue Exception => e
         Facter.debug("#{e.backtrace[0]}: #{$!}.")

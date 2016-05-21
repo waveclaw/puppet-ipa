@@ -34,17 +34,15 @@ EOF
     # @return [boolean] did I return a valid registration?
     # @api private
     def ipa_query(ipa_master='localhost', fqdn='ipa.auto.local')
-      # uses the directy json API.  This does require the gssapi gem
-      # http://adam.younglogic.com/2010/07/talking-to-freeipa-json-web-api-via-curl/
-      # and login credentials if required
-      require 'uri'
-      require 'puppet/util/ipajson'
-      registration = nil
-      server = IPA.new(ipa_master)
-      server.create_robot
-      host = server.post('host_find',[[fqdn],{}])
-      registration = true if (fqdn == host['result']['result'][0]['fqdn'][0])
-      !registration.nil?
+      host = Facter::Util::Ipa_utils.ipa_api(
+        ipa_master, fqdn, 'host_find', [[fqdn],{}])
+      if host.nil?
+        nil
+      elsif fqdn == host['result']['result'][0]['fqdn'][0]
+        true
+      else
+        false
+      end
     end
 
     # test for a password change date with basic keberos and raw LDAP tools
@@ -77,13 +75,13 @@ EOF
      ipa_master='localhost',
      ipa_domain='EXAMPLE.COM',
      fqdn='ipa.auto.local')
+     registered = nil
       # assumes your domain went from dc=x,dc=y,dc=z to x.y.z in the fact
       domain = ipa_domain.downcase.split(/\./).join(',dc=')
-      registered = nil
-      registered = Facter::Util::Resolution.exec(
-         "/usr/bin/ldapsearch -x -b dc=#{domain} -h #{ipa_master} \
-         fqdn=#{fqdn},cn=computers,cn=accounts,dc=#{domain}")
-       !registered.nil?
+      cmd = "/usr/bin/ldapsearch -x -b dc=#{domain} -h ldap://#{ipa_master} " +
+      "fqdn=#{fqdn},cn=computers,cn=accounts,dc=#{domain}"
+      registered = Facter::Util::Resolution.exec(cmd)
+      !registered.nil?
     end
 
     # check getentity API on the system for non-local users
@@ -96,9 +94,8 @@ EOF
       passwd = []
       entities = (Facter::Util::Resolution.exec(
         '/usr/bin/getent passwd')).split(/\n/).sort!
-      passwd = File.readlines('/etc/passwd')
+      passwd = File.readlines('/etc/passwd').split(/\n/).sort!
       passwd.each {|l| l.chomp! }
-      passwd.sort!
      if entities != passwd and entities.count != 0
        true
      else
@@ -110,24 +107,22 @@ EOF
     # @return [boolean] is this client registered?
     def ipa_client_registered
       # absolute minimal requirement
-      return false unless File.exist?('/etc/ipa/ca.crt')
       registered = nil # unknown
       ipa_master = Facter.value(:ipa_master)
       ipa_domain = Facter.value(:ipa_domain)
       fqdn = Facter.value(:fqdn)
       begin
-        if (File.exist? '/usr/sbin/ipa')
+        registered = ipa_query(ipa_master, fqdn)
+        if (registered !=true and File.exist? '/usr/bin/ipa')
            registered = ipa_client(fqdn)
         end
-        if (registered !=true) and File.exist?('/usr/bin/ipa')
-          registered = ipa_query(ipa_master, fqdn)
-        end
-        if (registered != true and File.exist?('/usr/bin/k5start') and
-             File.exist?('/usr/bin/ldapsearch'))
-          registered = k5start_registration(ipa_master, ipa_domain, fqdn)
-        end
-        if (registered != true and File.exist? '/usr/bin/ldapsearch')
-          registered = ldaps_registration(ipa_master, ipa_domain, fqdn)
+        if (registered != true and File.exist?('/usr/bin/ldapsearch'))
+          if File.exist?('/usr/bin/k5start')
+            registered = k5start_registration(ipa_master, ipa_domain, fqdn)
+          end
+          if registered != true
+            registered = ldaps_registration(ipa_master, ipa_domain, fqdn)
+          end
         end
         if (registered != true and File.exist? '/usr/bin/getent')
           registered = getent_registration
@@ -143,6 +138,6 @@ end
 
 Facter.add(:ipa_client_registered) do
   confine { File.exist?('/etc/krb5.keytab') }
-  confine { File.exist?('/etc/ipa/ca.pem') }
+  confine { File.exist?('/etc/ipa/ca.crt') }
   setcode { Facter::Util::Ipa_client_registered.ipa_client_registered }
 end

@@ -8,6 +8,7 @@
 #
 
 require 'spec_helper'
+require 'facter/util/ipa_utils'
 require 'facter/ipa_domain'
 ssd_examples = [
   {
@@ -111,15 +112,29 @@ default_realm = EXAMPLE.COM
 ]
 
 describe Facter::Util::Ipa_domain, :type => :puppet_function do
+  context 'when using ipatools' do
+    before :each do
+      allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf') { false }
+      allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf') { false }
+      allow(File).to receive(:exist?).with('/etc/krb5.conf' ) { false }
+      allow(File).to receive(:exist?).with('/usr/sbin/ipa' ) { true }
+    end
+    it 'gets a value from the ipatools method' do
+      expect(Facter::Util::Ipa_utils).to receive(:prepare_kinit) { 'foo' }
+      expect(Facter::Util::Resolution).to receive(:exec).with('foo') { 'thing' }
+      expect(Facter::Util::Ipa_domain.ipa_domain).to eq('thing')
+    end
+    it 'ipatools throws exceptions when there is an error' do
+      expect(Facter::Util::Ipa_utils).to receive(:prepare_kinit) { throw Error }
+      expect{Facter::Util::Ipa_domain.ipatools}.to raise_error(Exception)
+    end
+  end
   context 'with just sssd.conf' do
     before :each do
-      allow(File).to receive(:exist?).with(
-      '/etc/sssd/sssd.conf' ) { true }
-      allow(File).to receive(:exist?).with(
-      '/etc/krb5.conf' ) { false }
-      allow(File).to receive(:exist?).with(
-      '/etc/openldap/ldap.conf' ) { false }
-
+      allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf') { true }
+      allow(File).to receive(:exist?).with('/etc/krb5.conf') { false }
+      allow(File).to receive(:exist?).with('/etc/openldap/ldap.conf') { false }
+      allow(File).to receive(:exist?).with('/usr/sbin/ipa' ) { false }
     end
     it "should return nothing when there is an error" do
       expect(File).to receive(:open).with(
@@ -134,15 +149,16 @@ describe Facter::Util::Ipa_domain, :type => :puppet_function do
       end
     }
   end
+
   context 'with just ldap.conf' do
     before :each do
       allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
+      allow(File).to receive(:exist?).with('/usr/sbin/ipa' ) { false }
+      allow(File).to receive(:exist?).with('/usr/krb5.conf' ) { false }
     end
-    it "should return nothing when there is an error" do
-      expect(File).to receive(:exist?).with('/etc/openldap/ldap.conf' ) { true }
-      expect(File).to receive(:open).with(
-        '/etc/openldap/ldap.conf','r') { throw Error }
-      expect(Facter::Util::Ipa_domain.ipa_domain).to eq(nil)
+    it "should throw any error" do
+      expect(Facter::Util::Ipa_utils).to receive(:search_ldap_conf).with(/^[^#]?BASE\s+(\S+)/) { throw Error }
+      expect{Facter::Util::Ipa_domain.ldap}.to raise_error(NameError)
     end
     ldap_examples.each {|xample|
       it "should return a master for #{xample[:desc]}" do
@@ -153,6 +169,7 @@ describe Facter::Util::Ipa_domain, :type => :puppet_function do
       end
     }
   end
+
   context 'with just krb5.conf' do
     before :each do
         allow(File).to receive(:exist?).with('/etc/sssd/sssd.conf' ) { false }
