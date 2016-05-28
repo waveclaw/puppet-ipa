@@ -1,4 +1,6 @@
 .*.sw?
+junit
+log
 pkg
 spec/fixtures
 !spec/fixtures/hiera.yaml

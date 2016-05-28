@@ -10,6 +10,7 @@ group :test do
   gem "puppetlabs_spec_helper"
   gem 'puppet-syntax'
   gem "metadata-json-lint"
+  gem "codeclimate-test-reporter"
 end
 
 group :development do
