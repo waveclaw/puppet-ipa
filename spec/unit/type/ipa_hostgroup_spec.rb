@@ -15,7 +15,7 @@ require 'type_spec_tests'
 #  description => 'Puppet Servers',
 #}
 
-described_class = Puppet::Type.type(:ipa_group)
+described_class = Puppet::Type.type(:ipa_hostgroup)
 
 describe described_class, 'type' do
   it_behaves_like 'has ensurable', described_class
