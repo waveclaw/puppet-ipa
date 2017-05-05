@@ -9,7 +9,7 @@
 ################################################################################
 Puppet::Type.newtype(:ipa_sudorule) do
 
-  @doc = <<-'EOS'
+  @doc = <<-EOS
     Manages Sudo rules within IPA.
 
     Typically the properties are as they appear in the 'Host Based Access Control -> HBAC Rules' section of the web interface,
@@ -21,7 +21,7 @@ Puppet::Type.newtype(:ipa_sudorule) do
       to an empty value respectively.
 
       The parameters 'anyrunasuser' and 'anyrunasgroup', if true, will set
-      runasusers / runasusergroups / runasgroups to an empty value 
+      runasusers / runasusergroups / runasgroups to an empty value
 
       This allows you to keep values in your manifest and override them
 
@@ -309,4 +309,3 @@ Puppet::Type.newtype(:ipa_sudorule) do
   end
 
 end
-
