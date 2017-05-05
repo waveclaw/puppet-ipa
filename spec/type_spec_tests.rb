@@ -12,19 +12,37 @@ shared_examples_for 'has ensurable' do |described_class|
   end
 end
 
-
-shared_examples_for 'has properties' do |described_class, props|
-  props.each { |params|
-      context "for #{params}" do
+shared_examples_for 'has prameters' do |described_class, params|
+  params.each { |param|
+      context "for #{prop}" do
         it "should be of type property" do
-          expect(described_class.attrtype(params)).to eq(:property)
+          expect(described_class.attrtype(param)).to eq(:parameter)
         end
         it "should be of class Property" do
-          expect(described_class.attrclass(params).ancestors).
+          expect(described_class.attrclass(param).ancestors).
+            to include(Puppet::Pramater)
+        end
+        it "should have documentation" do
+          expect(described_class.attrclass(param).doc.strip).
+            not_to be_empty
+        end
+      end
+  }
+end
+
+
+shared_examples_for 'has properties' do |described_class, props|
+  props.each { |prop|
+      context "for #{prop}" do
+        it "should be of type property" do
+          expect(described_class.attrtype(prop)).to eq(:property)
+        end
+        it "should be of class Property" do
+          expect(described_class.attrclass(prop).ancestors).
             to include(Puppet::Property)
         end
         it "should have documentation" do
-          expect(described_class.attrclass(params).doc.strip).
+          expect(described_class.attrclass(prop).doc.strip).
             not_to be_empty
         end
       end
@@ -55,7 +73,7 @@ end
 
 shared_examples_for 'has boolean properties' do |described_class, props|
   props.each { |boolean_property|
-    context "for #{boolean_property}" do
+    context "#{boolean_property}" do
       it "should be a property" do
         expect(described_class.attrtype(boolean_property)).to eq(:property)
         expect(described_class.attrclass(boolean_property).ancestors).
@@ -84,5 +102,29 @@ shared_examples_for 'has boolean properties' do |described_class, props|
           Puppet::ResourceError, /.*/)
       end
     end
+  }
+end
+
+shared_examples_for 'has array properties' do |described_class, props|
+  props.each { |prop|
+      context "for #{prop}" do
+        it "should be of type property" do
+          expect(described_class.attrtype(prop)).to eq(:property)
+        end
+        it "should be of class Property" do
+          expect(described_class.attrclass(prop).ancestors).
+            to include(Puppet::Property)
+        end
+        it "should have documentation" do
+          expect(described_class.attrclass(prop).doc.strip).
+            not_to be_empty
+        end
+        it "should accept and return an array" do
+          testvalue = ['a', 'b', 'c']
+          @resource = described_class.new(
+           :name => 'foo', prop => testvalue)
+          expect(@resource[prop]).to eq(testvalue)
+        end
+      end
   }
 end

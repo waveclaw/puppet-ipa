@@ -1,6 +1,6 @@
 #!/usr/bin/ruby -S rspec
 #
-#  Test the type interface of theipa_group type.
+#  Test the type interface of the ipa_hbacrule "HBAC Rule" type.
 #
 #   Copyright 2016 JD Powell <waveclaw@hotmail.com>
 #
@@ -19,12 +19,12 @@ require 'type_spec_tests'
 #   usergroups    => ['puppet_admins'],
 # }
 
-described_class = Puppet::Type.type(:ipa_group)
+described_class = Puppet::Type.type(:ipa_hbacrule)
 
 describe described_class, 'type' do
   it_behaves_like 'has ensurable', described_class
   it_behaves_like 'has properties',  described_class,
-   [ :hosts, :hostgroups, :services, :servicegorups, :users, :usergroups ]
+   [ :hosts, :hostgroups, :services, :servicegroups, :users, :usergroups ]
   it_behaves_like 'has a name', described_class
   it_behaves_like 'has boolean properties',  described_class,
    [ :anyhost, :anyuser, :anyservice ]
