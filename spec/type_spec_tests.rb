@@ -12,15 +12,15 @@ shared_examples_for 'has ensurable' do |described_class|
   end
 end
 
-shared_examples_for 'has prameters' do |described_class, params|
+shared_examples_for 'has parameters' do |described_class, params|
   params.each { |param|
-      context "for #{prop}" do
-        it "should be of type property" do
-          expect(described_class.attrtype(param)).to eq(:parameter)
+      context "for #{param}" do
+        it "should be of type parameter" do
+          expect(described_class.attrtype(param)).to eq(:param)
         end
         it "should be of class Property" do
           expect(described_class.attrclass(param).ancestors).
-            to include(Puppet::Pramater)
+            to include(Puppet::Parameter)
         end
         it "should have documentation" do
           expect(described_class.attrclass(param).doc.strip).
