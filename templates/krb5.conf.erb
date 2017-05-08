@@ -3,12 +3,12 @@
 # Edits outside of Puppet  will be lost.
 #
 [libdefaults]
-default_realm = <%= scope.lookupvar('::ipa::domain') %>
+default_realm = <%= scope.lookupvar('::ipa::server') %>
 
 [realms]
   <%= scope.lookupvar('::ipa::domain') -%> = {
-    kdc = <%= scope.lookupvar('::ipa::master') %>
-    admin_server = <%= scope.lookupvar('::ipa::master') %>
+    kdc = <%= scope.lookupvar('::ipa::server') %>
+    admin_server = <%= scope.lookupvar('::ipa::server') %>
 	}
 
 [logging]
