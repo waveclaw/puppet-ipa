@@ -32,7 +32,7 @@ class ipa::install::repo {
         descr               => 'Copr repo for freeipa owned by mkosek',
         enabled             => '1',
         gpgcheck            => '0',
-        skip_if_unavailable => 'True',
+        skip_if_unavailable => 'true',
       }
     }
     'Suse': {
