@@ -37,7 +37,6 @@ end
 group :test do
   gem "rake"
   gem "listen","2.1.0"
-  gem "puppet", ENV['PUPPET_VERSION'] || '~> 3.8.4'
   gem "rspec-puppet", :git => 'https://github.com/rodjek/rspec-puppet.git'
   gem 'rspec-puppet-utils', :git => 'https://github.com/Accuity/rspec-puppet-utils.git'
   gem 'hiera-puppet-helper', :git => 'https://github.com/bobtfish/hiera-puppet-helper.git'
