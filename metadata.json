@@ -1,39 +1,55 @@
 {
   "name": "waveclaw-ipa",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "author": [
-    "waveclaw <waveclaw@waveclaw.net>",
-    "jonuwz <jonuwz@github.org>",
-    "Harvard Univerity IT <huit@harvard.edu>"
+     "jonuwz <jonuwz@github.org>",
+     "waveclaw <waveclaw@waveclaw.net>",
+     "Harvard Univerity IT <huit@harvard.edu>"
   ],
-  "summary": "Manage IPA with native types",
+  "summary": "Manage Identity Policy and Audit (IPA) servers",
   "license": "Apache-2.0",
   "source": "https://gitlab.waveclaw.net/Puppet/waveclaw-ipa",
   "project_page": "https://gitlab.waveclaw.net/Puppet/waveclaw-ipa/wikis/home",
-  "issues_url": "https://github.com/waveclaw/puppet-ipa/issues",
-  "description": "Fork of jonuwz-ipa with huit-ipa interface",
-  "operatingsystem_support": [
-  {
-    "operatingsystem":"RedHat",
-    "operatingsystemrelease":[
-      "5.0",
-      "6.0",
-      "7.0"
-    ]
-  },
-  {
-    "operatingsystem":"CentOS",
-    "operatingsystemrelease":[
-      "5.0",
-      "6.0",
-      "7.0"
-    ]
-  }
-  ],
+  "issues_url": "\"htps://github.com/waveclaw/puppet-ipa/issues\u001bO",
   "dependencies": [
     {
-      "name":"puppetlabs/stdlib",
-      "version_requiement": ">= 1.0.0 < 2.0.0"
-}
-  ]
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 4.13.1 < 5.0.0"
+    }
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "8"
+      ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "7.0"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "16.04"
+      ]
+    },
+    {
+      "operatingsystem": "Suse",
+      "operatingsystemrelease": [
+        "12"
+      ]
+    }
+  ],
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 4.7.0 < 6.0.0"
+    }
+  ],
+  "pdk-version": "1.0.1",
+  "template-url": "https://github.com/puppetlabs/pdk-module-template",
+  "template-ref": "heads/master-0-g5db7961"
 }
