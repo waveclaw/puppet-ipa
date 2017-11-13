@@ -19,8 +19,8 @@ homedir_substrinb = /home
 reconnection_retries = 3
 
 [domain/<%= scope.lookupvar('::ipa::domain') -%>]
-cache_credentials = True
-krb5_store_password_if_offline = True
+cache_credentials = true
+krb5_store_password_if_offline = true
 krb5_realm = <%= scope.lookupvar('::ipa::domain') %>
 ipa_domain = <%= scope.lookupvar('::ipa::domain') %>
 id_provider = ipa
